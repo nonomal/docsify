@@ -25,6 +25,7 @@ export class Compiler {
     this.router = router;
     this.cacheTree = {};
     this.toc = [];
+    this.blockquoteDepth = 0;
     this.cacheTOC = {};
     this.linkTarget = config.externalLinkTarget || '_blank';
     this.linkRel =
@@ -96,7 +97,7 @@ export class Compiler {
    * @param {string}   href   The href to the file to embed in the page.
    * @param {string}   title  Title of the link used to make the embed.
    *
-   * @return {type} Return value description.
+   * @return {any} Return value description.
    */
   compileEmbed(href, title) {
     const { str, config } = getAndRemoveConfig(title);
@@ -113,9 +114,13 @@ export class Compiler {
       }
 
       let media;
-      if (config.type && (media = compileMedia[config.type])) {
+      const mediaType = Array.isArray(config.type)
+        ? config.type[0]
+        : config.type;
+
+      if (mediaType && (media = compileMedia[mediaType])) {
         embed = media.call(this, href, title);
-        embed.type = config.type;
+        embed.type = mediaType;
       } else {
         let type = 'code';
         if (/\.(md|markdown)/.test(href)) {
@@ -135,6 +140,7 @@ export class Compiler {
       }
 
       embed.fragment = config.fragment;
+      embed.omitFragmentLine = config.omitFragmentLine;
 
       return embed;
     }
@@ -164,7 +170,10 @@ export class Compiler {
       router,
       compiler: this,
     });
-    origin.blockquoteCompiler = blockquoteCompiler({ renderer });
+    origin.blockquoteCompiler = blockquoteCompiler({
+      renderer,
+      compiler: this,
+    });
     origin.code = highlightCodeCompiler({ renderer });
     origin.link = linkCompiler({
       renderer,
@@ -177,8 +186,9 @@ export class Compiler {
     origin.image = imageCompiler({ renderer, contentBase, router });
     origin.list = taskListCompiler({ renderer });
     origin.listitem = taskListItemCompiler({ renderer });
-    origin.tablecell = tableCellCompiler({ renderer, compiler: this });
+    origin.tablecell = tableCellCompiler({ renderer });
 
+    // @ts-expect-error
     renderer.origin = origin;
 
     return renderer;
@@ -265,6 +275,7 @@ export class Compiler {
       text: text,
       tokens: [{ type: 'text', raw: text, text: text }],
     };
+    // @ts-expect-error
     return this.renderer.heading(tokenHeading);
   }
 

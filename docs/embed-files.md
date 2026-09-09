@@ -48,6 +48,10 @@ Front Matter, commonly utilized in blogging systems like Jekyll, serves to defin
 
 When using Markdown, YAML front matter will be stripped from the rendered content. The attributes cannot be used in this case.
 
+```html
+<script src="//cdn.jsdelivr.net/npm/docsify@5/dist/plugins/front-matter.min.js"></script>
+```
+
 ```markdown
 [filename](_media/example-with-yaml.md ':include')
 ```
@@ -65,9 +69,21 @@ Sometimes you don't want to embed a whole file. Maybe because you need just a fe
 ```
 
 In your code file you need to surround the fragment between `/// [demo]` lines (before and after the fragment).
-Alternatively you can use `### [demo]`.
+Alternatively you can use `### [demo]`. By default, only identifiers are omitted. To omit the entire line containing the identifier in the fragment output, add the `:omitFragmentLine` option. This is useful if your code fragment is e.g. HTML and you want to hide the Docsify fragment identifier from showing in your HTML source. `<!-- /// [demo] -->` in your source file and `:omitFragmentLine` will make the `-->` not show up in your Docsify code fragment section.
 
-Example:
+Example: In the source file \_media/example.js, `/// [demo]` identifiers have been included:
+
+```markdown
+[filename](_media/example.js ':include :type=code')
+```
+
+[filename](_media/example.js ':include :type=code')
+
+Adding the `:fragment=demo` results in the following:
+
+```markdown
+[filename](_media/example.js ':include :type=code :fragment=demo')
+```
 
 [filename](_media/example.js ':include :type=code :fragment=demo')
 

@@ -1,36 +1,59 @@
-export const blockquoteCompiler = ({ renderer }) =>
+export const blockquoteCompiler = ({ renderer, compiler }) =>
   (renderer.blockquote = function ({ tokens }) {
-    const calloutData =
-      tokens[0].type === 'paragraph' &&
-      // 0: Match "[!TIP] My Title"
-      // 1: Mark "[!TIP]"
-      // 2: Type "TIP"
-      tokens[0].raw.match(/^(\[!(\w+)\])/);
-
     let openTag = '<blockquote>';
     let closeTag = '</blockquote>';
 
-    if (calloutData) {
-      const calloutMark = calloutData[1]; // "[!TIP]"
-      const calloutType = calloutData[2].toLowerCase(); // "tip"
-      const token = tokens[0].tokens[0];
+    // Find the first paragraph token in the blockquote
+    const firstParagraphIndex = tokens.findIndex(t => t.type === 'paragraph');
+    const firstParagraph = tokens[firstParagraphIndex];
 
-      // Remove callout mark from tokens
-      ['raw', 'text'].forEach(key => {
-        token[key] = token[key].replace(calloutMark, '').trimStart();
-      });
+    if (firstParagraph) {
+      // Check if the paragraph starts with a callout like [!TIP] or [!NOTE]
+      const calloutData = firstParagraph.raw.match(/^(\[!(\w+)\])/);
 
-      // Remove empty paragraph
-      if (tokens.length > 1 && !token.raw.trim()) {
-        tokens = tokens.slice(1);
+      if (calloutData) {
+        const calloutMark = calloutData[1]; // "[!TIP]"
+        const calloutType = calloutData[2].toLowerCase(); // "tip"
+
+        // Avoid mutating tokens that may be reused from the Prerender cache.
+        tokens = tokens.slice();
+        const paragraph = { ...firstParagraph };
+        if (firstParagraph.tokens) {
+          paragraph.tokens = firstParagraph.tokens.map(t => ({ ...t }));
+        }
+        tokens[firstParagraphIndex] = paragraph;
+
+        // Remove the callout mark from the paragraph raw text
+        paragraph.raw = paragraph.raw.replace(calloutMark, '').trimStart();
+        if (paragraph.tokens && paragraph.tokens.length > 0) {
+          paragraph.tokens.forEach(t => {
+            if (t.raw) {
+              t.raw = t.raw.replace(calloutMark, '');
+            }
+            if (t.text) {
+              t.text = t.text.replace(calloutMark, '');
+            }
+          });
+        }
+
+        // If the first paragraph is now empty after removing [!TIP], remove it
+        if (!paragraph.raw.trim()) {
+          tokens.splice(firstParagraphIndex, 1);
+        }
+
+        openTag = `<div class="callout ${calloutType}">`;
+        closeTag = `</div>`;
       }
-
-      openTag = `<div class="callout ${calloutType}">`;
-      closeTag = `</div>`;
     }
 
-    const body = this.parser.parse(tokens);
-    const html = `${openTag}${body}${closeTag}`;
+    compiler.blockquoteDepth++;
+    let body = '';
 
-    return html;
+    try {
+      body = this.parser.parse(tokens);
+    } finally {
+      compiler.blockquoteDepth--;
+    }
+
+    return `${openTag}${body}${closeTag}`;
   });

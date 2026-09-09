@@ -12,6 +12,21 @@ You can configure Docsify by defining `window.$docsify` as an object:
 </script>
 ```
 
+Docsify is also available as an ES module. Import `Docsify` from a CDN and pass
+the configuration object to a new `Docsify` instance:
+
+```html
+<script type="module">
+  import { Docsify } from '//cdn.jsdelivr.net/npm/docsify@5/dist/docsify.module.min.js';
+
+  new Docsify({
+    repo: 'docsifyjs/docsify',
+    maxLevel: 3,
+    coverpage: true,
+  });
+</script>
+```
+
 The config can also be defined as a function, in which case the first argument is the Docsify `vm` instance. The function should return a config object. This can be useful for referencing `vm` in places like the markdown configuration:
 
 ```html
@@ -108,6 +123,37 @@ window.$docsify = {
 - Default: `true`
 
 Determines if Docsify should handle uncaught _synchronous_ plugin errors automatically. This can prevent plugin errors from affecting docsify's ability to properly render live site content.
+
+## collapseSidebarGroups
+
+- Type: `Boolean`
+- Default: `false`
+
+Initially collapses all root sidebar groups when `collapsibleSidebarGroups` is
+enabled. Visitors can still expand and collapse each group by selecting its
+title. Their choices are preserved while navigating between pages.
+
+```js
+window.$docsify = {
+  collapseSidebarGroups: true,
+  collapsibleSidebarGroups: true,
+};
+```
+
+## collapsibleSidebarGroups
+
+- Type: `Boolean`
+- Default: `false`
+
+Enables visitors to expand and collapse root sidebar groups by selecting their
+titles or using the <kbd>Enter</kbd> and <kbd>Space</kbd> keys. Enabling a
+sidebar chevron theme class also displays chevrons on these group titles.
+
+```js
+window.$docsify = {
+  collapsibleSidebarGroups: true,
+};
+```
 
 ## cornerExternalLinkTarget
 
@@ -240,6 +286,22 @@ window.$docsify = {
 };
 ```
 
+## fallbackDefaultLanguage
+
+- Type: `String`
+- Default: `''`
+
+When a page is requested and it doesn't exist for the given locale, Docsify will fallback to the language specified by this option.
+
+For example, in the scenario described above, if `/de/overview` does not exist and `fallbackDefaultLanguage` is configured as `zh-cn`, Docsify will fetch `/zh-cn/overview` instead of `/overview`.
+
+```js
+window.$docsify = {
+  fallbackLanguages: ['fr', 'de'],
+  fallbackDefaultLanguage: 'zh-cn', // default: ''
+};
+```
+
 ## formatUpdated
 
 - Type: `String|Function`
@@ -259,16 +321,48 @@ window.$docsify = {
 };
 ```
 
+## pageTitleFormatter
+
+- Type: `Function`
+- Default: `null`
+
+Optional function to customize how the site `name` is used when composing the document title. If provided, Docsify will call this function with the configured `name` (which may contain HTML) and use the returned string as the title portion for the site name — Docsify will not automatically strip HTML or otherwise modify the value. If not provided, Docsify falls back to the default behavior of stripping HTML tags from `name`.
+
+Basic example — strip HTML and trim (equivalent to Docsify's default behavior):
+
+```js
+window.$docsify = {
+  name: '<span>My Site</span>',
+  pageTitleFormatter(name) {
+    return name ? name.replace(/<[^>]+>/g, '').trim() : '';
+  },
+};
+```
+
 ## hideSidebar
 
 - Type : `Boolean`
-- Default: `true`
+- Default: `false`
 
 This option will completely hide your sidebar and won't render any content on the side.
 
 ```js
 window.$docsify = {
   hideSidebar: true,
+};
+```
+
+## sidebarPosition
+
+- Type: `String`
+- Default: `'left'`
+
+Controls which side of the page displays the sidebar. Set this to `'right'` to
+place the sidebar and its toggle on the right.
+
+```js
+window.$docsify = {
+  sidebarPosition: 'right',
 };
 ```
 
@@ -438,9 +532,24 @@ window.$docsify = {
 };
 ```
 
+## navbarPreservePath
+
+- Type: `Boolean`
+- Default: `false`
+
+If **true**, appends the current document path to navbar links that point to a language root. This makes it possible to switch languages while staying on the corresponding document.
+
+For example, when the current path is `/quickstart`, a navbar link to `/zh-cn/` becomes `/zh-cn/quickstart`.
+
+```js
+window.$docsify = {
+  navbarPreservePath: true,
+};
+```
+
 ## name
 
-- Type: `String`
+- Type: `Boolean|String`
 
 Website name as it appears in the sidebar.
 
@@ -455,6 +564,22 @@ The name field can also contain custom HTML for easier customization:
 ```js
 window.$docsify = {
   name: '<span>docsify</span>',
+};
+```
+
+If `true`, the website name will be inferred from the document's `<title>` tag.
+
+```js
+window.$docsify = {
+  name: true,
+};
+```
+
+If `false` or empty, no name will be displayed.
+
+```js
+window.$docsify = {
+  name: false,
 };
 ```
 
@@ -636,6 +761,10 @@ window.$docsify = {
 };
 ```
 
+## plugins
+
+See [Plugins](./plugins.md).
+
 ## relativePath
 
 - Type: `Boolean`
@@ -689,6 +818,8 @@ window.$docsify = {
   repo: 'https://github.com/docsifyjs/docsify/',
 };
 ```
+
+If undefined or empty, no GitHub corner will be displayed.
 
 ## requestHeaders
 
@@ -871,9 +1002,9 @@ window.$docsify = {
 Determines if/how the site's [skip navigation link](https://webaim.org/techniques/skipnav/) will be rendered.
 
 ```js
-// Render skip link for all routes (default)
+// Render skip link for all routes
 window.$docsify = {
-  skipLink: 'Skip to main content',
+  skipLink: 'Skip to content',
 };
 ```
 
@@ -893,6 +1024,13 @@ window.$docsify = {
 // Do not render skip link
 window.$docsify = {
   skipLink: false,
+};
+```
+
+```js
+// Use default
+window.$docsify = {
+  skipLink: true, // "Skip to main content"
 };
 ```
 

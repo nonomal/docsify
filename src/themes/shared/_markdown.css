@@ -30,6 +30,8 @@
   }
 
   a {
+    overflow-wrap: anywhere;
+
     &.anchor {
       color: inherit;
 
@@ -185,9 +187,10 @@
     }
   }
 
-  code,
+  :not(pre) > code,
   samp {
     white-space: pre-wrap;
+    overflow-wrap: break-word;
   }
 
   code {

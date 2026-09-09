@@ -167,6 +167,10 @@ describe('core/render/tpl', () => {
 });
 
 describe('core/render/slugify', () => {
+  beforeEach(() => {
+    slugify.clear();
+  });
+
   test('slugify()', () => {
     const htmlStrippedSlug = slugify(
       'Bla bla bla <svg aria-label="broken" class="broken" viewPort="0 0 1 1"><circle cx="0.5" cy="0.5"/></svg>',
@@ -212,5 +216,24 @@ describe('core/render/slugify', () => {
 
     const quoteCleanedSlug = slugify('"The content"');
     expect(quoteCleanedSlug).toBe('the-content');
+
+    const markdownLinkSlug = slugify(
+      '[5.0.0-rc.4](https://github.com/docsifyjs/docsify/compare/v5.0.0-rc.3...v5.0.0-rc.4) (2026-03-11)',
+    );
+    expect(markdownLinkSlug).toBe('_500-rc4-2026-03-11');
+  });
+
+  test('slugify.clear() resets duplicate tracking', () => {
+    expect(slugify('duplicate')).toBe('duplicate');
+    expect(slugify('duplicate')).toBe('duplicate-1');
+
+    slugify.clear();
+
+    expect(slugify('duplicate')).toBe('duplicate');
+  });
+
+  test('slugify() handles inherited property names as new slugs', () => {
+    expect(slugify('constructor')).toBe('constructor');
+    expect(slugify('constructor')).toBe('constructor-1');
   });
 });
